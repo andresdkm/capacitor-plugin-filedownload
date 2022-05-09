@@ -7,6 +7,8 @@ export interface FileDownloadPlugin {
 export interface FileDownloadOptions {
   uri: string;
   fileName: string;
+  title: string;
+  description: string;
 }
 export interface FileDownloadResponse {
   path: string;

@@ -70,6 +70,8 @@ public class FileDownloadPlugin extends Plugin {
     private void downloadFile(final PluginCall call) {
         String url = call.getString("uri","");
         String filename = call.getString("fileName","");
+        String title = call.getString("title","");
+        String description = call.getString("description","");
 
         //创建下载任务
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
@@ -77,8 +79,8 @@ public class FileDownloadPlugin extends Plugin {
         request.setAllowedOverRoaming(false);
         //在通知栏中显示，默认就是显示的
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-        request.setTitle("文件下载器");
-        request.setDescription(filename + "下载中...");
+        request.setTitle(title);
+        request.setDescription(description);
         request.setVisibleInDownloadsUi(true);
 
         //设置下载的路径
