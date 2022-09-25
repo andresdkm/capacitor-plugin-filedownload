@@ -74,10 +74,12 @@ addListener(eventName: 'downloadProgress', listenerFunc: (progress: FileDownload
 
 #### FileDownloadOptions
 
-| Prop           | Type                |
-| -------------- | ------------------- |
-| **`uri`**      | <code>string</code> |
-| **`fileName`** | <code>string</code> |
+| Prop              | Type                |
+| ----------------- | ------------------- |
+| **`uri`**         | <code>string</code> |
+| **`fileName`**    | <code>string</code> |
+| **`title`**       | <code>string</code> |
+| **`description`** | <code>string</code> |
 
 
 #### FileDownloadResponse
