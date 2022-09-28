@@ -45,7 +45,7 @@ public class FileDownloadPlugin: CAPPlugin {
             _call.resolve(data)
             break
         case .failure:
-            _call.reject("下载失败！请检查URL是否正确")
+            _call.reject("Error")
         default:
             break
         }
