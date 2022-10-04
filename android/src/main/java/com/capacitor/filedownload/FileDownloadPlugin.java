@@ -1,6 +1,7 @@
 package com.capacitor.filedownload;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -25,122 +26,77 @@ import java.io.File;
 @CapacitorPlugin(name = "FileDownload")
 public class FileDownloadPlugin extends Plugin {
 
-    private final FileDownload implementation = new FileDownload();
+  private static final String TAG = "FileDownload";
 
-    private final int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 10001;
-    //下载器
-    private DownloadManager downloadManager;
-    private Context mContext;
-    //下载的ID
-    private long downloadId;
-    private String pathstr;
+  private final int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 10001;
+  private DownloadManager downloadManager;
+  private Context mContext;
+  PluginCall _call;
 
-    PluginCall _call;
+  @PluginMethod
+  public void download(PluginCall call) {
+    _call = call;
+    mContext = getContext();
+    requestPermissions();
+    downloadFile(call);
+  }
 
-    @PluginMethod
-    public void download(PluginCall call) {
-        _call = call;
-        mContext = getContext();
-        requestPermissions();
+  public void sendEvent(String name, JSObject ret) {
+    this.notifyListeners(name, ret);
+  }
 
-        downloadFile(call);
+  private void requestPermissions() {
+    if (ContextCompat.checkSelfPermission(mContext,
+      Manifest.permission.WRITE_EXTERNAL_STORAGE)
+      != PackageManager.PERMISSION_GRANTED) {
+      //没有授权，编写申请权限代码
+      ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+    } else {
+      Log.d(TAG, "requestMyPermissions: error");
+    }
+    if (ContextCompat.checkSelfPermission(mContext,
+      Manifest.permission.READ_EXTERNAL_STORAGE)
+      != PackageManager.PERMISSION_GRANTED) {
+      //没有授权，编写申请权限代码
+      ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+    } else {
+      Log.d(TAG, "requestMyPermissions: error");
+    }
+  }
+
+  private void downloadFile(final PluginCall call) {
+    try{
+      requestPermissions();
+      if (downloadManager == null)
+        downloadManager = (DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
+      String url = call.getString("uri", "");
+      String filename = call.getString("fileName", "");
+      String title = call.getString("title", "");
+      String description = call.getString("description", "");
+      String objectId = call.getString("objectId", "");
+      FileDownload fileDownload = new FileDownload(this, title, description, objectId,filename, url);
+      fileDownload.downloadFile();
+      JSObject ret = new JSObject();
+      ret.put("objectId", objectId);
+      call.resolve(ret);
+    }catch (Exception exception){
+      call.reject(exception.getMessage());
+      exception.printStackTrace();
     }
 
-    //获取权限
-    private void requestPermissions() {
-        if (ContextCompat.checkSelfPermission(mContext,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            //没有授权，编写申请权限代码
-            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-        } else {
-            Log.d("", "requestMyPermissions: 有写SD权限");
-        }
-        if (ContextCompat.checkSelfPermission(mContext,
-                Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            //没有授权，编写申请权限代码
-            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-        } else {
-            Log.d("", "requestMyPermissions: 有读SD权限");
-        }
-    }
 
-    //下载文件
-    private void downloadFile(final PluginCall call) {
-        String url = call.getString("uri","");
-        String filename = call.getString("fileName","");
-        String title = call.getString("title","");
-        String description = call.getString("description","");
+  }
 
-        //创建下载任务
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-        //移动网络情况下是否允许漫游
-        request.setAllowedOverRoaming(false);
-        //在通知栏中显示，默认就是显示的
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
-        request.setTitle(title);
-        request.setDescription(description);
-        request.setVisibleInDownloadsUi(true);
+  public DownloadManager getDownloadManager() {
+    return downloadManager;
+  }
 
-        //设置下载的路径
-        File file = new File(mContext.getExternalFilesDir(""), filename);
-        request.setDestinationUri(Uri.fromFile(file));
-        pathstr = file.getAbsolutePath();
+  public Context getmContext() {
+    return mContext;
+  }
 
-        //获取DownloadManager
-        if (downloadManager == null)
-            downloadManager = (DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
-        //将下载请求加入下载队列，加入下载队列后会给该任务返回一个long型的id，通过该id可以取消任务，重启任务、获取下载的文件等等
-        if (downloadManager != null) {
-            downloadId = downloadManager.enqueue(request);
-        }
+  public PluginCall get_call() {
+    return _call;
+  }
 
-        //注册广播接收者，监听下载状态
-        mContext.registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-    }
-
-    //广播监听下载的各个状态
-    private BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            checkStatus();
-        }
-    };
-
-    //检查下载状态
-    private void checkStatus() {
-        DownloadManager.Query query = new DownloadManager.Query();
-        //通过下载的id查找
-        query.setFilterById(downloadId);
-        Cursor cursor = downloadManager.query(query);
-        if (cursor.moveToFirst()) {
-            int status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));
-            switch (status) {
-                //下载暂停
-                case DownloadManager.STATUS_PAUSED:
-                    break;
-                //下载延迟
-                case DownloadManager.STATUS_PENDING:
-                    break;
-                //正在下载
-                case DownloadManager.STATUS_RUNNING:
-                    break;
-                //下载完成
-                case DownloadManager.STATUS_SUCCESSFUL:
-                    //下载完成
-                    cursor.close();
-                    JSObject ret = new JSObject();
-                    ret.put("path", "file://" + pathstr);
-                    _call.resolve(ret);
-                    break;
-                //下载失败
-                case DownloadManager.STATUS_FAILED:
-                    cursor.close();
-                    mContext.unregisterReceiver(receiver);
-                    _call.reject("下载失败,请检查URL是否正确");
-                    break;
-            }
-        }
-    }
 }

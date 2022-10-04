@@ -31,6 +31,7 @@ FileDownload.download({
 
 * [`download(...)`](#download)
 * [`addListener(...)`](#addlistener)
+* [`addListener(...)`](#addlistener)
 * [Interfaces](#interfaces)
 
 </docgen-index>
@@ -69,6 +70,22 @@ addListener(eventName: 'downloadProgress', listenerFunc: (progress: FileDownload
 --------------------
 
 
+### addListener(...)
+
+```typescript
+addListener(eventName: 'downloadStatus', listenerFunc: (status: FileDownloadStatus) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
+```
+
+| Param              | Type                                                                                   |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| **`eventName`**    | <code>"downloadStatus"</code>                                                          |
+| **`listenerFunc`** | <code>(status: <a href="#filedownloadstatus">FileDownloadStatus</a>) =&gt; void</code> |
+
+**Returns:** <code>any</code>
+
+--------------------
+
+
 ### Interfaces
 
 
@@ -80,6 +97,7 @@ addListener(eventName: 'downloadProgress', listenerFunc: (progress: FileDownload
 | **`fileName`**    | <code>string</code> |
 | **`title`**       | <code>string</code> |
 | **`description`** | <code>string</code> |
+| **`objectId`**    | <code>string</code> |
 
 
 #### FileDownloadResponse
@@ -94,6 +112,7 @@ addListener(eventName: 'downloadProgress', listenerFunc: (progress: FileDownload
 | Prop           | Type                |
 | -------------- | ------------------- |
 | **`progress`** | <code>number</code> |
+| **`objectId`** | <code>string</code> |
 
 
 #### PluginListenerHandle
@@ -101,6 +120,14 @@ addListener(eventName: 'downloadProgress', listenerFunc: (progress: FileDownload
 | Prop         | Type                      |
 | ------------ | ------------------------- |
 | **`remove`** | <code>() =&gt; any</code> |
+
+
+#### FileDownloadStatus
+
+| Prop           | Type                |
+| -------------- | ------------------- |
+| **`status`**   | <code>string</code> |
+| **`objectId`** | <code>string</code> |
 
 </docgen-api>
 
