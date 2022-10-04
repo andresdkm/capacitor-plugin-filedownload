@@ -53,6 +53,10 @@ public class FileDownload {
     File file = new File(instance.getmContext().getExternalFilesDir(""), filename);
     request.setDestinationUri(Uri.fromFile(file));
     pathstr = file.getAbsolutePath();
+    JSObject ret = new JSObject();
+    ret.put("objectId", objectId);
+    ret.put("progress", 0);
+    instance.sendEvent("downloadProgress", ret);
     downloadId = instance.getDownloadManager().enqueue(request);
     new Thread(new Runnable() {
       @SuppressLint("Range")
